@@ -1,0 +1,100 @@
+##################################################
+# Author    : Luciano Donizeti da Silva - Luck
+# Date      : 18/12/2021
+# Updated   :
+# Updated by:
+####################################################
+version: "3.8"
+
+services:
+  postgres:
+    image: postgres
+    container_name: postgres
+    restart: always
+    ports:
+      - 5432:5432
+    environment:
+      POSTGRES_PASSWORD: root
+    volumes:
+      - ./data:/var/lib/postgresql/data
+    networks:
+      - api-net
+
+  adminer:
+    image: adminer
+    container_name: adminer
+    restart: always
+    ports:
+      - 87:8080
+    networks:
+      - api-net
+
+  localstack:
+    image: localstack/localstack:latest
+    container_name: localstack
+    ports:
+      - "4566:4566" # health check - http://localhost:4566/health
+      - "4571:4571"
+
+    environment:
+      - SERVICES=dynamodb,s3,sqs,sns
+      - DEBUG=1
+      - DATA_DIR=/tmp/localstack/data
+      - AWS_DEFAULT_REGION=us-east-1
+      - HOST_TMP_FOLDER=${TMPDIR:-/tmp/}localstack
+      - DOCKER_HOST=unix:///var/run/docker.sock
+
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock"
+      - './createSqsSns4LocalStack.sh:/etc/localstack/init/ready.d/init-aws.sh'
+
+    networks:
+      - api-net
+
+  sqs-sns-client:
+    image: lucksjb/aws-sqs-sns-client
+    container_name: sqs-sns-client
+    ports:
+      - "3010:3000"
+
+    networks:
+      - api-net
+
+# redis-commander            
+  redis-commander:
+      image: lucksjb/redis-commander
+      container_name: redis-commander
+
+      ports:
+          - 3020:8081
+        
+      tty: true
+      environment:
+          - REDIS_HOST=redis
+          - REDIS_PORT=6379
+
+      networks: 
+          - api-net
+
+      
+  redis:
+      image: redis:3.2.5-alpine
+      container_name: redis
+      ports:
+          - 6379:6379
+
+      healthcheck:
+          test: [ "CMD", "redis-cli", "ping"]
+          interval: 1s
+          timeout: 3s
+          retries: 30
+
+      networks: 
+          - api-net
+
+networks:
+  api-net:
+    name: api-net
+    driver: bridge
+
+

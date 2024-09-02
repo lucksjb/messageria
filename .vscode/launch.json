@@ -1,0 +1,14 @@
+{
+    "configurations": [
+        {
+            "type": "java",
+            "name": "Spring Boot-MessageriaApplication<messageria>",
+            "request": "launch",
+            "cwd": "${workspaceFolder}",
+            "mainClass": "com.example.messageria.MessageriaApplication",
+            "projectName": "messageria",
+            "args": "",
+            "envFile": "${workspaceFolder}/.env"
+        }
+    ]
+}
